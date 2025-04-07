@@ -54,7 +54,7 @@ global-ua: clash.meta
 
 profile:
   store-selected: true
-  store-fake-ip: true
+  store-fake-ip: false
 
 geo-auto-update: true
 
@@ -97,7 +97,9 @@ sniffer:
 
 tun:
   enable: true
-  stack: mixed
+  udp: true
+  mtu: 1450
+  stack: system
   auto-route: true
   auto-redirect: true
   auto-detect-interface: true
@@ -106,11 +108,10 @@ tun:
     - 8.8.8.8:53  
     - tcp://8.8.8.8:53  
     - tcp://any:53
-  udp: true
 
 dns:
   enable: true
-  cache-algorithm: arc
+  cache-algorithm: lru
   listen: 0.0.0.0:1053
   sniff-tls-sni: true
   respect-rules: false
@@ -130,35 +131,37 @@ dns:
   cache: 300
 
   nameserver:
-    - https://dns.google/dns-query
+#    - https://dns.google/dns-query
+    - 8.8.8.8
+    - 8.8.4.4
     - 201.81.47.5
     - 201.81.46.201
     - 201.81.80.2
-    - https://dns.cloudflare.com/dns-query
-    - https://dns.quad9.net/dns-query
-    - dns.quad9.net
-    - dns.cloudflare.com
-    - dns.google
-    - tls://dns.google:853
-    - tls://1.1.1.1:853
+#    - https://dns.cloudflare.com/dns-query
+#    - https://dns.quad9.net/dns-query
+#    - dns.quad9.net
+#    - dns.cloudflare.com
+#    - dns.google
+#    - tls://dns.google:853
+#    - tls://1.1.1.1:853
       
   default-nameserver:
     - 8.8.8.8
-    - 8.8.4.4
+    - 1.1.1.1
        
   fallback-nameserver:
-    - 1.1.1.1
+    - 8.8.4.4
     - 1.0.0.1
 
 experimental:
     geodata-mode: true
-    mptcp: false
-    quic-go-disable-gso: true
+#    mptcp: false
+    quic-go-disable-gso: false
     quic-go-disable-ecn: true
     geodata-loader: memconservative
     fallback-filter:
       geoip: true
-      geoip-code: US
+      geoip-code: MM
       geosite:
          mm: true
          gfw: true
@@ -182,26 +185,6 @@ enhanced-mode-by-rule: true
 
 proxy-providers:
 
-  SSH:
-    type: file
-    path: ./profile/proxies/ssh.yaml
-    health-check:
-      enable: true
-      url: "https://www.gstatic.com/generate_204"
-      interval: 300
-      tolerance: 30 
-      skip-cert-verify: true
-
-  20250404:
-    type: file
-    path: ./profile/proxies/20250404.yaml
-    health-check:
-      enable: true
-      url: "https://www.gstatic.com/generate_204"
-      interval: 300
-      tolerance: 30 
-      skip-cert-verify: true
-
   Epodonios:
     type: http
     filter: "HK|hk|hongkong|hong kong|SG|sg|Singapore|singapore"
@@ -213,13 +196,13 @@ proxy-providers:
     health-check:
       enable: true
       interval: 300
-      tolerance: 30
+      tolerance: 20
       url: "https://www.gstatic.com/generate_204"
       skip-cert-verify: true
 
   Barabama:
     type: http
-    filter: "HK|hk|hongkong|hong kong|SG|sg|Singapore|singapore"
+#    filter: "HK|hk|hongkong|hong kong|SG|sg|Singapore|singapore"
     etag-support: true
     url: "https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/clashmeta.yaml"
     path: ./profile/proxies/barabama.yaml
@@ -228,7 +211,7 @@ proxy-providers:
     health-check:
       enable: true
       interval: 300
-      tolerance: 30
+      tolerance: 20
       url: "https://www.gstatic.com/generate_204"
       skip-cert-verify: true
 
@@ -243,7 +226,7 @@ proxy-providers:
     health-check:
       enable: true
       interval: 300
-      tolerance: 30
+      tolerance: 20
       url: "https://www.gstatic.com/generate_204"
       skip-cert-verify: true
 
@@ -258,7 +241,7 @@ proxy-providers:
     health-check:
       enable: true
       interval: 300
-      tolerance: 30
+      tolerance: 20
       url: "https://www.gstatic.com/generate_204"
       skip-cert-verify: true
 
@@ -273,7 +256,7 @@ proxy-providers:
     health-check:
       enable: true
       interval: 300
-      tolerance: 30
+      tolerance: 20
       url: "https://www.gstatic.com/generate_204"
       skip-cert-verify: true
 
@@ -288,7 +271,7 @@ proxy-providers:
     health-check:
       enable: true
       interval: 300
-      tolerance: 30
+      tolerance: 20
       url: "https://www.gstatic.com/generate_204"
       skip-cert-verify: true
 
@@ -297,8 +280,6 @@ proxy-groups:
   - name: auto
     type: url-test
     use:
-      - SSH
-      - 20250404
       - Epodonios
       - Pawdroid
       - Barabama
@@ -307,11 +288,11 @@ proxy-groups:
       - Soroushmirzaei-HK
     filter: "HK|SG|hk|hongkong|hong kong|sg|Singapore|singapore"
     url: "https://www.gstatic.com/generate_204"
-    interval: 300
-    latency: 30
+    interval: 150
+    latency: 20
+    udp: true
     skip-cert-verify: true
     exclude-type: "Trojan|Http|DIRECT"
-    icon: "💯"
 
   - name: load-balance
     type: load-balance
@@ -319,7 +300,6 @@ proxy-groups:
     use: 
       - Peasoft
       - Epodonios
-      - 20250404
       - Pawdroid
       - Barabama
       - Soroushmirzaei-HK
@@ -327,21 +307,12 @@ proxy-groups:
     filter: "HK|SG|hk|hongkong|hong kong|sg|Singapore|singapore"
     lazy: true
     url: "https://www.gstatic.com/generate_204"
-    interval: 300
-    latency: 30
+    interval: 150
+    latency: 20
     skip-cert-verify: true
     exclude-type: "Trojan|Http|DIRECT"
-    icon: "⚖️"
 
 rule-providers:
-
-    MM-IPCIDR:
-      type: http
-      etag-support: true
-      interval: 86400
-      behavior: classical
-      url: "https://github.com/Loyalsoldier/geoip/raw/refs/heads/release/clash/classical/mm.txt"
-      path: ./profile/rules/ipcidr/MM-IPCIDR.yaml
 
     AdultPopUp:
       type: http
@@ -483,6 +454,14 @@ rule-providers:
 
 rules:
 
+  - DOMAIN,easylist-downloads.adblockplus.org,auto
+
+  - DOMAIN,alb.reddit.com,auto
+
+##FASTSSH
+  - DOMAIN-SUFFIX,fastssh.com,REJECT-DROP
+  - DOMAIN-SUFFIX,fastssh.com,auto
+
   - DOMAIN-SUFFIX,d.metacubexd.one,DIRECT,no-resolve
   - DOMAIN-SUFFIX,samsungconsent.com,auto,no-resolve
   - PROCESS-NAME,org.telegram.group,DIRECT
@@ -507,49 +486,45 @@ rules:
   - DOMAIN,sdk-api-v1.singular.net,DIRECT,no-resolve
   - DOMAIN-KEYWORD,singular,auto,no-resolve
 
+##YOUTUBE
+  - PROCESS-NAME,org.schabi.newpipe,auto
+  - DOMAIN,geosite:youtube,auto
+  - DOMAIN-SUFFIX,ytimg.com,auto
+    
 ##FACEBOOK
   - DOMAIN-KEYWORD,scontent,auto
-  - DOMAIN-SUFFIX,fbsbx.com,REJECT-DROP
-  - DOMAIN-SUFFIX,fbcdn.net,REJECT-DROP
-  - DOMAIN-SUFFIX,facebook.net,REJECT-DROP
-  - DOMAIN-SUFFIX,an.facebook.com,REJECT-DROP
-  - DOMAIN-KEYWORD,ads,REJECT-DROP
-  - DOMAIN-SUFFIX,doubleclick.net,REJECT-DROP
+  - DOMAIN-SUFFIX,fbsbx.com,REJECT
+  - DOMAIN-SUFFIX,fbcdn.net,REJECT
+  - DOMAIN-SUFFIX,facebook.net,REJECT
+  - DOMAIN-SUFFIX,an.facebook.com,REJECT
+  - DOMAIN-KEYWORD,ads,REJECT
+  - DOMAIN-SUFFIX,doubleclick.net,REJECT
   - DOMAIN-SUFFIX,m.facebook.com,auto
   - DOMAIN-SUFFIX,fb.me,auto
   - DOMAIN-SUFFIX,fb.watch,auto
-  - DOMAIN,ads.facebook.com,REJECT-DROP
-  - DOMAIN-KEYWORD, advertising,REJECT-DROP
-  - DOMAIN,orgads-dev.fb.me,REJECT-DROP
+  - DOMAIN,ads.facebook.com,REJECT
+  - DOMAIN-KEYWORD, advertising,REJECT
+  - DOMAIN,orgads-dev.fb.me,REJECT
   - DOMAIN-SUFFIX,facebook.com,auto
   - DOMAIN-KEYWORD,messenger,auto
 
-##OTHERS
-  - DOMAIN-SUFFIX,sshkit.com,DIRECT,no-resolve
-  - DOMAIN-KEYWORD,fastssh,DIRECT,no-resolve
-  - DOMAIN-KEYWORD,sshkit,DIRECT,no-resolve
-  - DOMAIN,www.fastssh.com,DIRECT,no-resolve
-  - DOMAIN,www.sshkit.com,DIRECT,no-resolve
-  - DOMAIN-SUFFIX,fastssh.com,DIRECT,no-resolve
-
 ##RULE-SETS
-  - RULE-SET,MM-IPCIDR,DIRECT
-  - RULE-SET,AdultPopUp,REJECT-DROP
-  - RULE-SET,AntiAds,REJECT-DROP
-  - RULE-SET,StevenBlack,REJECT-DROP
-  - RULE-SET,LoyalSoldier,REJECT-DROP
-  - RULE-SET,oisd_big,REJECT-DROP
-  - RULE-SET,Hagezi,REJECT-DROP
-  - RULE-SET,EasyList,REJECT-DROP
-  - RULE-SET,Brave,REJECT-DROP
-  - RULE-SET,BanProgramAD,REJECT-DROP
-  - RULE-SET,Reiji_Adblock,REJECT-DROP
-  - RULE-SET,GoodByeAds,REJECT-DROP
-  - RULE-SET,NoPopUp_GEO_Location,REJECT-DROP
-  - DOMAIN,geosite:category-ads@ads,REJECT-DROP
+  - RULE-SET,AdultPopUp,REJECT
+  - RULE-SET,AntiAds,REJECT
+  - RULE-SET,StevenBlack,REJECT
+  - RULE-SET,LoyalSoldier,REJECT
+  - RULE-SET,oisd_big,REJECT
+  - RULE-SET,Hagezi,REJECT
+  - RULE-SET,EasyList,REJECT
+  - RULE-SET,Brave,REJECT
+  - RULE-SET,BanProgramAD,REJECT
+  - RULE-SET,Reiji_Adblock,REJECT
+  - RULE-SET,GoodByeAds,REJECT
+  - RULE-SET,NoPopUp_GEO_Location,REJECT
+  - DOMAIN,geosite:category-ads@ads,REJECT
 
-  - DOMAIN,img.doppiocdn.com,REJECT-DROP
-  - DOMAIN,sextb.live,REJECT-DROP
+  - DOMAIN,img.doppiocdn.com,REJECT
+  - DOMAIN,sextb.live,REJECT
   
   - IP-CIDR,23.204.13.0/24,auto,no-resolve
   - IP-CIDR,104.160.128.0/19,auto,no-resolve
@@ -575,28 +550,27 @@ rules:
   - DOMAIN-KEYWORD,google,auto
   - DOMAIN,speed.cloudflare.com,auto
   - DOMAIN,google.com,auto
-  - DOMAIN-KEYWORD,club388myanmar,REJECT-DROP
-  - DOMAIN-KEYWORD,vipclubmm,REJECT-DROP
-  - DOMAIN-KEYWORD,388gaming,REJECT-DROP
+  - DOMAIN-KEYWORD,club388myanmar,REJECT
+  - DOMAIN-KEYWORD,vipclubmm,REJECT
+  - DOMAIN-KEYWORD,388gaming,REJECT
   - DOMAIN,gstaticadssl.l.google.com,REJECT
   
-  - GEOIP,MM,DIRECT
+  - GEOIP,MM,auto
   - DOMAIN,geosite:google-play,auto
-  - DOMAIN,geosite:iqiyi-ads,REJECT-DROP
-  - DOMAIN,geosite:adblockplus,REJECT-DROP
-  - DOMAIN,geosite:segment-ads,REJECT-DROP
-  - DOMAIN,geosite:adjust-ads,REJECT-DROP
-  - DOMAIN,geosite:category-ads-all,REJECT-DROP
-  - DOMAIN,geosite:category-ads,REJECT-DROP
-  - DOMAIN,geosite:category-ads-mm,REJECT-DROP
-  - DOMAIN,geosite:xiaomi-ads,REJECT-DROP
-  - DOMAIN,geosite:youtube,auto,no-resolve
+  - DOMAIN,geosite:iqiyi-ads,REJECT
+  - DOMAIN,geosite:adblockplus,REJECT
+  - DOMAIN,geosite:segment-ads,REJECT
+  - DOMAIN,geosite:adjust-ads,REJECT
+  - DOMAIN,geosite:category-ads-all,REJECT
+  - DOMAIN,geosite:category-ads,REJECT
+  - DOMAIN,geosite:category-ads-mm,REJECT
+  - DOMAIN,geosite:xiaomi-ads,REJECT
   - DOMAIN,geosite:samsung,auto,no-resolve
-  - DOMAIN,geosite:unity-ads,REJECT-DROP
-  - DOMAIN,geosite:meta-ads,REJECT-DROP
-  - DOMAIN,gepip:google-ads,REJECT-DROP
-  - DOMAIN,geosite:category-public-tracker,REJECT-DROP
-  - DOMAIN-KEYWORD,googleadservices,REJECT-DROP
+  - DOMAIN,geosite:unity-ads,REJECT
+  - DOMAIN,geosite:meta-ads,REJECT
+  - DOMAIN,gepip:google-ads,REJECT
+  - DOMAIN,geosite:category-public-tracker,REJECT
+  - DOMAIN-KEYWORD,googleadservices,REJECT
   - PROCESS-NAME,com.sec.android.app.sbrowser,auto
   - PROCESS-NAME,sia.internet.apps.samsung.com,auto
   - PROCESS-NAME,mm.com.mptvas,auto
